@@ -1,0 +1,7 @@
+root: '/home/artem/projects/MCS2022.Baseline/test/public_test/images/'
+test_list: '/home/artem/projects/MCS2022.Baseline/test/public_test/images_w_boxes.csv'
+pairs_list: '/home/artem/projects/MCS2022.Baseline/test/public_test/submission_list.csv'
+batch_size: 128
+augmentations: 'default'
+augmentations_valid: 'default'
+num_workers: 16
