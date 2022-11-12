@@ -112,4 +112,4 @@ class ValDataset(data.Dataset):
         return img1, img2, score
 
     def __len__(self):
-        return len(self.val_pairs_txt)
+        return len(self.val_pairs)

@@ -45,13 +45,14 @@ def get_dataloaders(config):
                                          val_list=config.dataset.val_list,
                                          transforms=augmentations.get_val_aug(config),
                                          is_cropped=config.dataset.cropped)
+
         val_loader = torch.utils.data.DataLoader(
             val_dataset,
             batch_size=config.dataset.batch_size,
-            shuffle=False,
+            shuffle=True,
             num_workers=config.dataset.num_workers,
-            drop_last=False,
-            pin_memory=True
+            pin_memory=True,
+            drop_last=True
         )
     print("Done.")
 

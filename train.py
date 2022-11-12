@@ -1,8 +1,7 @@
-import torch
 import numpy as np
+import torch
+from sklearn import metrics
 from tqdm import tqdm
-from sklearn.metrics import roc_auc_score
-from sklearn.preprocessing import normalize
 
 from utils import AverageMeter
 
@@ -80,8 +79,8 @@ def train(model: torch.nn.Module,
     print('Train process of epoch: {} is done; \n loss: {:.4f}; acc: {:.2f}'.format(epoch, loss_avg, acc_avg))
 
 
-def calc_roc_auc(val_loader, model):
-    val_iter = tqdm(val_loader, desc='Val', dynamic_ncols=True, position=2)
+def calc_roc_auc(val_loader, model, alpha=0.8, beta=0.2, thresh=0.85):
+    val_iter = tqdm(val_loader, desc='Val', dynamic_ncols=True)
 
     for step, (img1, img2, score) in enumerate(val_iter):
         embeddings1 = model(img1.cuda().to(
@@ -101,12 +100,16 @@ def calc_roc_auc(val_loader, model):
             total_embeddings2 = np.vstack((total_embeddings2, embeddings2))
             total_scores = np.hstack((total_scores, score))
 
-    # total_embeddings1 = normalize(total_embeddings1)
-    # total_embeddings2 = normalize(total_embeddings2)
     dists = np.linalg.norm(total_embeddings1 - total_embeddings2, axis=1)
-    norm_dists = (2 - dists) / 2
-    roc_auc = roc_auc_score(total_scores, norm_dists)
-    return roc_auc
+    norm_dists = 1 / (1 + np.exp((alpha - dists) / beta))
+    rocauc = metrics.roc_auc_score(total_scores, norm_dists)
+
+    preds = (norm_dists > thresh).astype(int)
+    acc = metrics.accuracy_score(total_scores, preds)
+
+    far = np.count_nonzero(np.logical_and(total_scores == 0, preds == 1)) / total_scores.size
+    frr = np.count_nonzero(np.logical_and(total_scores == 1, preds == 0)) / total_scores.size
+    return rocauc, acc, far, frr
 
 
 def calc_acc(val_loader, model, criterion):
@@ -156,6 +159,6 @@ def validation(model: torch.nn.Module,
             print('Validation of epoch: {} is done; \n loss: {:.4f}; acc: {:.2f}'.format(epoch, loss_avg, acc_avg))
             return acc_avg
         elif mode == "pairs":
-            rocauc = calc_roc_auc(val_loader, model)
-            print('Validation of epoch: {} is done; \n rocauc: {:.2f}'.format(epoch, rocauc))
+            rocauc, acc, far, frr = calc_roc_auc(val_loader, model)
+            print('Validation of epoch: {} is done; \n rocauc: {:.2f}; acc: {:.2f}; far: {:.2f}; frr: {:.2f}'.format(epoch, rocauc, acc, far, frr))
             return rocauc

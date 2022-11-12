@@ -28,7 +28,7 @@ model:
     m: 0.4
 
 train:
-    metric: 'rocauc' # 'accuracy'
+    valmode: 'pairs' # 'simple'
     fp16: true
     optimizer: 'AdamW'
     learning_rate: 0.000343

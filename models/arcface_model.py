@@ -76,4 +76,4 @@ class WhalesNet(nn.Module):
         if labels is not None:
             return self.margin(features, labels)
 
-        return self.margin(features, labels), features
+        return features
