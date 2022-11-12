@@ -7,6 +7,7 @@ dataset:
     root: 'path/to/dataset/images'
     train_list: 'path/to/dataset/train.csv'
     val_list: 'path/to/dataset/val.csv'
+    val_pairs: 'path/to/val_pairs.csv'
     val_path: 'path/to/val/images'
     cropped: true
     seed: 42
@@ -27,6 +28,7 @@ model:
     m: 0.4
 
 train:
+    metric: 'rocauc' # 'accuracy'
     fp16: true
     optimizer: 'AdamW'
     learning_rate: 0.000343

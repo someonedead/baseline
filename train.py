@@ -109,35 +109,34 @@ def calc_roc_auc(val_loader, model):
     return roc_auc
 
 
-def validation_new(model: torch.nn.Module,
-                   medium_val_loader: torch.utils.data.DataLoader,
-                   hard_val_loader224: torch.utils.data.DataLoader,
-                   hard_val_loader232: torch.utils.data.DataLoader,
-                   criterion: torch.nn.Module,
-                   epoch):
-    """
-    Model validation function for one epoch
-    :param model: model architecture
-    :param val_loader: dataloader for batch generation
-    :param criterion: selected criterion for calculating the loss function
-    :param epoch (int): epoch number
-    :return: float: avg acc
-     """
+def calc_acc(val_loader, model, criterion):
+    loss_stat = AverageMeter('Loss')
+    acc_stat = AverageMeter('Acc.')
 
-    with torch.no_grad():
-        model.eval()
-        # medium_roc_auc = calc_roc_auc(medium_val_loader, model)
-        medium_roc_auc = 0
+    val_iter = tqdm(val_loader, desc='Val', dynamic_ncols=True, position=2)
 
-        # print(f'ROC_AUC on MEDIUM of epoch {epoch}: {medium_roc_auc:.4f}')
-        hard_roc_auc224 = calc_roc_auc(hard_val_loader224, model)
-        print(f'ROC_AUC on HARD of epoch {epoch}: {hard_roc_auc224:.4f}')
-        hard_roc_auc232 = 0
-        # print(f'ROC_AUC on HARD 232 of epoch {epoch}: {hard_roc_auc232:.4f}')
-        return medium_roc_auc, hard_roc_auc224, hard_roc_auc232
+    for step, (x, y) in enumerate(val_iter):
+        # out = model(x.cuda().to(memory_format=torch.contiguous_format))
+        out = model(x.cuda().to(memory_format=torch.contiguous_format), y.cuda())
+        loss = criterion(out, y.cuda())
+        num_of_samples = x.shape[0]
+
+        loss_stat.update(loss.detach().cpu().item(), num_of_samples)
+
+        scores = torch.softmax(out, dim=1).detach().cpu().numpy()
+        predict = np.argmax(scores, axis=1)
+        gt = y.detach().cpu().numpy()
+
+        acc = np.mean(gt == predict)
+        acc_stat.update(acc, num_of_samples)
+
+    acc_val, acc_avg = acc_stat()
+    loss_val, loss_avg = loss_stat()
+    return acc_avg, loss_avg
 
 
 def validation(model: torch.nn.Module,
+               mode: str,
                val_loader: torch.utils.data.DataLoader,
                criterion: torch.nn.Module,
                epoch) -> None:
@@ -148,30 +147,15 @@ def validation(model: torch.nn.Module,
     :param criterion: selected criterion for calculating the loss function
     :param epoch (int): epoch number
     :return: float: avg acc
-     """
-    loss_stat = AverageMeter('Loss')
-    acc_stat = AverageMeter('Acc.')
+    """
 
     with torch.no_grad():
         model.eval()
-        val_iter = tqdm(val_loader, desc='Val', dynamic_ncols=True, position=2)
-
-        for step, (x, y) in enumerate(val_iter):
-            # out = model(x.cuda().to(memory_format=torch.contiguous_format))
-            out = model(x.cuda().to(memory_format=torch.contiguous_format), y.cuda())
-            loss = criterion(out, y.cuda())
-            num_of_samples = x.shape[0]
-
-            loss_stat.update(loss.detach().cpu().item(), num_of_samples)
-
-            scores = torch.softmax(out, dim=1).detach().cpu().numpy()
-            predict = np.argmax(scores, axis=1)
-            gt = y.detach().cpu().numpy()
-
-            acc = np.mean(gt == predict)
-            acc_stat.update(acc, num_of_samples)
-
-        acc_val, acc_avg = acc_stat()
-        loss_val, loss_avg = loss_stat()
-        print('Validation of epoch: {} is done; \n loss: {:.4f}; acc: {:.2f}'.format(epoch, loss_avg, acc_avg))
-        return acc_avg
+        if mode == "simple":
+            acc_avg, loss_avg = calc_acc(val_loader, model, criterion)
+            print('Validation of epoch: {} is done; \n loss: {:.4f}; acc: {:.2f}'.format(epoch, loss_avg, acc_avg))
+            return acc_avg
+        elif mode == "pairs":
+            rocauc = calc_roc_auc(val_loader, model)
+            print('Validation of epoch: {} is done; \n rocauc: {:.2f}'.format(epoch, rocauc))
+            return rocauc

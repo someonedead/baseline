@@ -50,32 +50,24 @@ def main(args: argparse.Namespace) -> None:
 
     criterion, optimizer, scheduler = utils.get_training_parameters(config, net)
     train_epoch = tqdm(range(config.train.n_epoch), disable=True)
+    val_mode = config.train.valmode
 
     # main process
-    best_acc = 0.0
+    best_metric = 0.0
     for epoch in train_epoch:
         train(net, train_loader, criterion, optimizer, config, epoch)
-        acc = validation(
+        metric = validation(
             net,
+            mode=config.train.valmode,
             val_loader=val_loader,
             criterion=criterion,
             epoch=epoch,
         )
-        # medium_roc_auc, hard_roc_auc224, hard_roc_auc232 = validation(
-        #     net,
-        #     medium_val_loader=medium_val_loader,
-        #     hard_val_loader224=hard_val_loader224,
-        #     hard_val_loader232=hard_val_loader232,
-        #     criterion=criterion,
-        #     epoch=epoch,
-        # )
-        # max_hard_roc_auc = max(hard_roc_auc224, hard_roc_auc232)
-        # if max_hard_roc_auc  >= best_roc_auc:
-        if acc >= best_acc:
+        if metric >= best_metric:
             utils.save_checkpoint(
-                net, optimizer, scheduler, epoch, outdir, acc
+                net, optimizer, scheduler, epoch, outdir, val_mode, metric
             )
-            best_acc = acc
+            best_metric = metric
         scheduler.step()
 
 

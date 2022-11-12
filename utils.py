@@ -17,26 +17,9 @@ def convert_dict_to_tuple(dictionary):
     return namedtuple("GenericDict", dictionary.keys())(**dictionary)
 
 
-# def save_checkpoint(model, optimizer, scheduler, epoch, outdir, epoch_avg_acc):
-#     """Saves checkpoint to disk"""
-#     filename = f"model_{epoch:04d}_roc_auc_{epoch_avg_acc:.4f}.pth"
-#     directory = outdir
-#     filename = os.path.join(directory, filename)
-#     weights = model.state_dict()
-#     state = OrderedDict(
-#         [
-#             ("state_dict", weights),
-#             ("optimizer", optimizer.state_dict()),
-#             ("scheduler", scheduler.state_dict()),
-#             ("epoch", epoch),
-#         ]
-#     )
-
-#     torch.save(state, filename)
-
-def save_checkpoint(model, optimizer, scheduler, epoch, outdir, epoch_avg_acc):
+def save_checkpoint(model, optimizer, scheduler, epoch, outdir, val_mode, metric):
     """Saves checkpoint to disk"""
-    filename = f"model_{epoch:04d}_acc_{epoch_avg_acc:.4f}.pth"
+    filename = f"model_{epoch:04d}_{val_mode}_{metric:.4f}.pth"
     directory = outdir
     filename = os.path.join(directory, filename)
     weights = model.state_dict()
