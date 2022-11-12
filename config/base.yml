@@ -4,10 +4,10 @@ outdir: './experiments/'
 num_gpu: 1
 
 dataset:
-    root: '/home/gaus/projects/whales_hackathon/Whale_ReId_2_mm'
-    train_list: '/home/gaus/projects/whales_hackathon/train.csv'
-    val_list: '/home/gaus/projects/whales_hackathon/val.csv'
-    val_path: '/home/artem/datasets/CompCars/data/image'
+    root: 'path/to/dataset/images'
+    train_list: 'path/to/dataset/train.csv'
+    val_list: 'path/to/dataset/val.csv'
+    val_path: 'path/to/val/images'
     cropped: true
     seed: 42
     num_of_classes: 102
