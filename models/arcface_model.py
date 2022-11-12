@@ -60,7 +60,7 @@ class WhalesNet(nn.Module):
         self.margin = ArcModule(in_features=self.channel_size, out_features=self.out_feature, s=self.s, m=self.m)
         self.bn1 = nn.BatchNorm2d(self.in_features)
         self.dropout = nn.Dropout2d(dropout, inplace=True)
-        self.fc1 = nn.Linear(self.in_features * 16, self.channel_size)  # 576
+        self.fc1 = nn.Linear(self.in_features * 100, self.channel_size)  # 576
         self.bn2 = nn.BatchNorm1d(self.channel_size)
 
     def forward(self, x, labels=None):
