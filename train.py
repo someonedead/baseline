@@ -79,7 +79,7 @@ def train(model: torch.nn.Module,
     print('Train process of epoch: {} is done; \n loss: {:.4f}; acc: {:.2f}'.format(epoch, loss_avg, acc_avg))
 
 
-def calc_roc_auc(val_loader, model, alpha=0.8, beta=0.2, thresh=0.85):
+def calc_roc_auc(val_loader, model, alpha=1, beta=0.2, thresh=0.85):
     val_iter = tqdm(val_loader, desc='Val', dynamic_ncols=True)
 
     for step, (img1, img2, score) in enumerate(val_iter):
@@ -101,7 +101,7 @@ def calc_roc_auc(val_loader, model, alpha=0.8, beta=0.2, thresh=0.85):
             total_scores = np.hstack((total_scores, score))
 
     dists = np.linalg.norm(total_embeddings1 - total_embeddings2, axis=1)
-    norm_dists = 1 / (1 + np.exp((alpha - dists) / beta))
+    norm_dists = 1 / (1 + np.exp((dists - alpha) / beta))
     rocauc = metrics.roc_auc_score(total_scores, norm_dists)
 
     preds = (norm_dists > thresh).astype(int)
@@ -160,5 +160,5 @@ def validation(model: torch.nn.Module,
             return acc_avg
         elif mode == "pairs":
             rocauc, acc, far, frr = calc_roc_auc(val_loader, model)
-            print('Validation of epoch: {} is done; \n rocauc: {:.2f}; acc: {:.2f}; far: {:.2f}; frr: {:.2f}'.format(epoch, rocauc, acc, far, frr))
+            print('Validation of epoch: {} is done; \n rocauc: {:.4f}; acc: {:.2f}; far: {:.2f}; frr: {:.2f}'.format(epoch, rocauc, acc, far, frr))
             return rocauc
